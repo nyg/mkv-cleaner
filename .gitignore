@@ -1,0 +1,12 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Don't accidentally commit MKV files
+*.mkv
+*.mk3d
+
+# Editor
+.vscode/
+.idea/
+*.swp
