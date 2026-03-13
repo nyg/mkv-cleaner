@@ -1,16 +1,18 @@
 # mkv-cleaner
 
-An AI agent configuration for cleaning MKV files using Claude Code or GitHub Copilot CLI.
+An AI agent for cleaning MKV files using [GitHub Copilot CLI](https://docs.github.com/copilot/how-tos/copilot-cli) (also compatible with Claude Code).
 
 The agent uses `ffprobe` to analyze each file, then constructs and runs an `mkvmerge` (or `ffmpeg`) command to strip unwanted streams — no re-encoding, just a fast lossless remux.
 
 ## What it does
 
-- **Audio**: keeps only English tracks; if multiple English tracks exist, keeps the highest quality one (TrueHD > DTS-HD MA > DTS > EAC3 > AC3 > AAC …)
+- **Audio**: keeps only English tracks by default (configurable per-run); picks the highest quality one (TrueHD Atmos > DTS-HD MA > EAC3 > AC3 > AAC …)
 - **Subtitles**: keeps only English tracks (all variants: regular, forced, SDH)
-- **Chapters**: always preserved
-- **Attachments**: keeps fonts and cover art; removes others
 - **Video**: untouched, never re-encoded
+- **Chapters**: always preserved
+- **Attachments**: removed (fonts, cover art, thumbnails)
+- **Metadata**: statistics tags and encoding tool junk stripped
+- **Output naming**: cleaned filenames (`Title.Year.mkv`) in a `cleaned/` subfolder
 
 ## Requirements
 
@@ -20,49 +22,39 @@ brew install mkvtoolnix ffmpeg
 
 # Ubuntu / Debian
 sudo apt install mkvtoolnix ffmpeg
-
-# Windows (WSL recommended, or use winget)
-winget install MKVToolNix ffmpeg
 ```
 
-You also need one of:
-
-| Tool | Install |
-|------|---------|
-| **Claude Code** | `npm install -g @anthropic-ai/claude-code` |
-| **GitHub Copilot CLI** | `gh extension install github/gh-copilot` |
-
-## Setup
+You also need [GitHub Copilot CLI](https://docs.github.com/copilot/how-tos/copilot-cli):
 
 ```bash
-git clone https://github.com/you/mkv-cleaner
-cd mkv-cleaner
-bash scripts/install-hooks.sh   # installs the pre-commit hook (one-time)
+# macOS / Linux
+curl -fsSL https://gh.io/copilot-install | bash
+
+# or with Homebrew
+brew install copilot-cli
 ```
 
 ## Usage
 
-**Navigate to your MKV folder and launch the agent:**
+**Use the convenience script:**
 
 ```bash
-# With Claude Code — auto-loads CLAUDE.md as context
-cd /path/to/your/movies
-claude "clean all MKVs in this folder"
-
-# With GitHub Copilot CLI
-cd /path/to/your/movies
-gh copilot suggest -t shell "clean all MKVs in this folder"
-
-# Or use the convenience wrapper (auto-detects which tool is available)
 bash /path/to/mkv-cleaner/scripts/mkv-clean.sh /path/to/your/movies
+```
+
+**Or launch Copilot CLI directly from the repo root:**
+
+```bash
+cd /path/to/mkv-cleaner
+copilot "clean all MKVs in /path/to/your/movies"
 ```
 
 **Example prompts:**
 
 ```bash
-claude "clean Movie.mkv"
-claude "clean all MKVs in ~/Movies/Series/Season1 recursively"
-claude "clean all MKVs here but keep French audio too"
+copilot "clean Movie.mkv"
+copilot "clean all MKVs in ~/Movies/Series/Season1 recursively"
+copilot "clean all MKVs here but keep French audio too"
 ```
 
 ## Repo structure
@@ -70,32 +62,11 @@ claude "clean all MKVs here but keep French audio too"
 ```
 mkv-cleaner/
 ├── README.md
-├── CLAUDE.md                          # Auto-generated — Claude Code reads this
-├── AGENTS.md                          # Auto-generated — Copilot reads this
-├── prompts/
-│   └── mkv-cleaner.md                 # ← EDIT THIS to change agent behaviour
+├── AGENTS.md              # Agent instructions — edit this to change behaviour
 └── scripts/
-    ├── sync-prompts.sh                # Manually sync prompt to derived files
-    ├── install-hooks.sh               # Install the pre-commit hook (run once)
-    ├── pre-commit.hook                # Hook source, tracked by git
-    └── mkv-clean.sh                   # Convenience launcher
+    └── mkv-clean.sh       # Convenience launcher with scoped tool permissions
 ```
 
 ## Editing the prompt
 
-**Only edit `prompts/mkv-cleaner.md`** — `CLAUDE.md` and `.AGENTS.md` are auto-generated and will be overwritten.
-
-The pre-commit hook syncs them automatically when you commit:
-
-```bash
-vim prompts/mkv-cleaner.md
-git add prompts/mkv-cleaner.md
-git commit -m "tweak audio quality ranking"
-# Hook fires → CLAUDE.md and AGENTS.md are updated and added to the commit
-```
-
-Or sync manually without committing:
-
-```bash
-bash scripts/sync-prompts.sh
-```
+Edit `AGENTS.md` directly — it is the single source of truth. Both Copilot CLI and Claude Code read it natively.
