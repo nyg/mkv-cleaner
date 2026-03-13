@@ -71,8 +71,7 @@ claude "clean all MKVs here but keep French audio too"
 mkv-cleaner/
 ├── README.md
 ├── CLAUDE.md                          # Auto-generated — Claude Code reads this
-├── .github/
-│   └── copilot-instructions.md        # Auto-generated — Copilot reads this
+├── AGENTS.md                          # Auto-generated — Copilot reads this
 ├── prompts/
 │   └── mkv-cleaner.md                 # ← EDIT THIS to change agent behaviour
 └── scripts/
@@ -84,7 +83,7 @@ mkv-cleaner/
 
 ## Editing the prompt
 
-**Only edit `prompts/mkv-cleaner.md`** — `CLAUDE.md` and `.github/copilot-instructions.md` are auto-generated and will be overwritten.
+**Only edit `prompts/mkv-cleaner.md`** — `CLAUDE.md` and `.AGENTS.md` are auto-generated and will be overwritten.
 
 The pre-commit hook syncs them automatically when you commit:
 
@@ -92,7 +91,7 @@ The pre-commit hook syncs them automatically when you commit:
 vim prompts/mkv-cleaner.md
 git add prompts/mkv-cleaner.md
 git commit -m "tweak audio quality ranking"
-# Hook fires → CLAUDE.md and copilot-instructions.md are updated and added to the commit
+# Hook fires → CLAUDE.md and AGENTS.md are updated and added to the commit
 ```
 
 Or sync manually without committing:

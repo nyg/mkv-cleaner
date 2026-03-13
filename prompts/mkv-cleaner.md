@@ -9,7 +9,7 @@ For every MKV file you process, follow these steps in order:
 
 1. **Analyze**: Run ffprobe to get full stream info in JSON format:
    ```
-   ffprobe -v quiet -print_format json -show_streams -show_chapters "<file>"
+   ffprobe -v quiet -print_format json -show_streams -show_chapters -show_format "<file>"
    ```
 
 2. **Plan**: Parse the JSON, identify every stream, and explain what you will keep/remove and why.
@@ -23,7 +23,7 @@ For every MKV file you process, follow these steps in order:
 ## Stream Selection Rules
 
 ### Video
-- Keep all video streams, exactly as-is.
+- Keep the video stream that has the highest resolution/quality.
 - Never re-encode video under any circumstances.
 
 ### Audio
@@ -52,12 +52,11 @@ For every MKV file you process, follow these steps in order:
 - **Always preserve** chapter information.
 
 ### Attachments
-- Keep: fonts (needed for ASS/SSA subtitle rendering), cover art/thumbnails.
-- Remove: all other attachments.
+- Do not keep any attachments, e.g. fonts, cover art, thumbnails.
 
 ### Tags & Metadata
-- Keep: title, language tags, track names.
-- Remove: encoding tool metadata, statistics tags, junk metadata bloat.
+- Keep: language tags, track names.
+- Remove: title, encoding tool metadata, statistics tags, junk metadata bloat.
 
 ## Tool Preference
 
@@ -68,8 +67,7 @@ Check availability with `command -v mkvmerge` before deciding.
 
 ## Output Files
 
-- Default: save cleaned file alongside original as `<name>.clean.mkv`
-- If a `cleaned/` subfolder exists in the working directory, output there instead.
+- Default: save cleaned file alongside original in a folder named `cleaned` with filename `<name>.<year>.mkv` (in `name`, replace whitespaces by a dot and remove special characters).
 - Never overwrite the source file unless the user explicitly says "overwrite" or "-y".
 
 ## Batch Processing

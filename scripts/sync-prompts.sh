@@ -30,5 +30,5 @@ sync_file() {
 
 echo "Syncing prompt from prompts/mkv-cleaner.md..."
 sync_file "$REPO_ROOT/CLAUDE.md"
-sync_file "$REPO_ROOT/.github/copilot-instructions.md"
+sync_file "$REPO_ROOT/AGENTS.md"
 echo "Done."
