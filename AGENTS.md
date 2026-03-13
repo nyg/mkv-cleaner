@@ -14,11 +14,11 @@ For every MKV file you process, follow these steps in order:
 
 2. **Plan** — Parse the JSON output. For each stream, state whether you will keep or remove it and why. Present this as a table to the user.
 
-3. **Confirm** — Show the exact mkvmerge (or ffmpeg) command you plan to run. Wait for user approval before executing.
+3. **Execute** — Show the exact mkvmerge (or ffmpeg) command, then run it immediately. Output to a new file (never overwrite the original).
 
-4. **Execute** — Run the command. Output to a new file (never overwrite the original).
+4. **Verify** — Run ffprobe on the output file and summarize the resulting streams, chapters, and file size. Report size savings vs the original.
 
-5. **Verify** — Run ffprobe on the output file and summarize the resulting streams, chapters, and file size. Report size savings vs the original.
+5. **Report** — Write a markdown report for the file (see Report Files below).
 
 ## Stream Selection Rules
 
@@ -100,6 +100,34 @@ When asked to process a folder:
 - If ffprobe fails on a file, skip it and report the error — do not abort the whole batch.
 - If a required tool (ffprobe, mkvmerge/ffmpeg) is missing, stop immediately and tell the user how to install it.
 - If the output file already exists, skip and warn rather than overwriting.
+
+## Report Files
+
+After cleaning each file, write a markdown report to `cleaned/<name>.<year>.md` (same base name as the cleaned MKV). The report documents what was done and why.
+
+**Report format:**
+
+```markdown
+# <Cleaned Filename>
+
+**Original:** `<original filename>` (<original size>)
+**Output:** `<cleaned filename>` (<output size>, <savings>% smaller)
+
+## Streams
+
+| # | Type | Codec | Lang | Details | Action |
+|---|------|-------|------|---------|--------|
+| 0 | Video | HEVC | eng | 3840×1600, 23.976fps | ✅ Keep |
+| 1 | Audio | AC3 | rus | 2.0, 192kbps, "MVO [HDRezka]" | ❌ Remove (not English) |
+| 2 | Audio | EAC3 | eng | 5.1, 640kbps, "Original" | ✅ Keep (best English) |
+| … | … | … | … | … | … |
+
+## Command
+
+\```bash
+mkvmerge -o "cleaned/Eden.2024.mkv" ...
+\```
+```
 
 ## Example Commands
 

@@ -1,6 +1,6 @@
 # mkv-cleaner
 
-An AI agent for cleaning MKV files using [GitHub Copilot CLI](https://docs.github.com/copilot/how-tos/copilot-cli) (also compatible with Claude Code).
+An AI agent for cleaning MKV files using [GitHub Copilot CLI](https://docs.github.com/copilot/how-tos/copilot-cli).
 
 The agent uses `ffprobe` to analyze each file, then constructs and runs an `mkvmerge` (or `ffmpeg`) command to strip unwanted streams — no re-encoding, just a fast lossless remux.
 
@@ -13,6 +13,7 @@ The agent uses `ffprobe` to analyze each file, then constructs and runs an `mkvm
 - **Attachments**: removed (fonts, cover art, thumbnails)
 - **Metadata**: statistics tags and encoding tool junk stripped
 - **Output naming**: cleaned filenames (`Title.Year.mkv`) in a `cleaned/` subfolder
+- **Reports**: per-file markdown report with stream analysis and command details
 
 ## Requirements
 
@@ -69,4 +70,4 @@ mkv-cleaner/
 
 ## Editing the prompt
 
-Edit `AGENTS.md` directly — it is the single source of truth. Both Copilot CLI and Claude Code read it natively.
+Edit `AGENTS.md` directly — it is the single source of truth.
