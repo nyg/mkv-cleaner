@@ -40,7 +40,7 @@ brew install copilot-cli
 **Use the convenience script:**
 
 ```bash
-bash /path/to/mkv-cleaner/scripts/mkv-clean.sh /path/to/your/movies
+./mkv-clean.sh /path/to/your/movies
 ```
 
 **Or launch Copilot CLI directly from the repo root:**
@@ -64,8 +64,7 @@ copilot "clean all MKVs here but keep French audio too"
 mkv-cleaner/
 ├── README.md
 ├── AGENTS.md              # Agent instructions — edit this to change behaviour
-└── scripts/
-    └── mkv-clean.sh       # Convenience launcher with scoped tool permissions
+└── mkv-clean.sh           # Convenience launcher with scoped tool permissions
 ```
 
 ## Editing the prompt

@@ -1,14 +1,14 @@
-#!/usr/bin/env bash
-# scripts/mkv-clean.sh
+#!/usr/bin/env sh
+# mkv-clean.sh
 # Convenience wrapper to launch the MKV cleaner agent.
-# Usage: bash /path/to/scripts/mkv-clean.sh [target-folder]
+# Usage: ./mkv-clean.sh [target-folder]
 
-set -euo pipefail
+set -eu
 
 TARGET="${1:-$(pwd)}"
 PROMPT="Clean all MKV files in: $TARGET"
 
-if ! command -v copilot &>/dev/null; then
+if ! command -v copilot >/dev/null 2>&1; then
   echo "ERROR: GitHub Copilot CLI not found." >&2
   echo "" >&2
   echo "Install it:" >&2
