@@ -32,6 +32,7 @@ The default language to keep is **English** (`eng` / `en`). The user may overrid
 
 ### Audio
 - Keep only audio tracks matching the target language(s) (default: English, `eng` or `en`).
+- **Exclude commentary tracks:** After selecting tracks by language, remove any track whose title/name contains the word "commentary" (case-insensitive). If excluding commentary would leave zero audio tracks for the target language, keep the commentary track(s) and warn the user.
 - If a track has language `und` (undefined) or no language tag at all, **keep it and warn** the user — it may be the only audio.
 - If no track matches the target language, keep all tracks and warn the user.
 - If multiple tracks match the target language, keep only the **highest quality** one using this ranking:
@@ -78,7 +79,14 @@ Check availability with `command -v mkvmerge` before deciding.
 
 Output to a `cleaned/` subfolder alongside the original files. Create the folder if it does not exist.
 
-**Filename format:** `<name>.<year>.mkv`
+### Detecting movies vs. series episodes
+
+Inspect the original filename for a season/episode pattern (`S01E02`, `s1e3`, `1x02`, etc.):
+- **If a pattern is found** → treat as a **series episode**.
+- **Otherwise** → treat as a **movie**.
+
+### Movie filename format: `<Name>.<Year>.mkv`
+
 - Clean the name: replace spaces and hyphens with dots, remove release group tags (e.g. `- TeamName`), quality tags (`720p`, `1080p`, `2160p`, `x264`, `x265`, `HEVC`, `HDR`, `DV`, `Remux`, `BluRay`, `WEB-DL`, etc.), and other non-title junk.
 - Extract the year (4-digit number between 1900–2099) from the original filename if present.
 - If no year is found in the filename, search the internet (Wikipedia, IMDb, or similar) using the cleaned title to find the release year.
@@ -86,12 +94,28 @@ Output to a `cleaned/` subfolder alongside the original files. Create the folder
   - `Eden.2024.2160p.DV.HDR.HEVC.EAC3-NewTeam.mkv` → `cleaned/Eden.2024.mkv`
   - `Some Movie 720p x264-GROUP.mkv` → (search year) → `cleaned/Some.Movie.2019.mkv`
 
-Never overwrite the source file.
+### Series episode filename format: `<Series.Name>.<SxxExx>.<Episode.Name>.mkv`
+
+- **No year** in the output filename.
+- Clean the series name the same way as movie names (dots for spaces, remove junk tags). The series name is everything before the season/episode marker.
+- Normalize the season/episode to zero-padded `SxxExx` form (e.g. `s1e3` → `S01E03`, `1x02` → `S01E02`).
+- Extract the episode name: text between the SxxExx marker and the first quality/release tag. If no episode name is present, omit it.
+- Examples:
+  - `Dexter S01E02 Crocodile 1080p BluRay x264-GROUP.mkv` → `cleaned/Dexter.S01E02.Crocodile.mkv`
+  - `Breaking.Bad.S05E16.Felina.2160p.WEB-DL.mkv` → `cleaned/Breaking.Bad.S05E16.Felina.mkv`
+  - `The.Office.US.S03E01.720p.mkv` → `cleaned/The.Office.US.S03E01.mkv`
+
+## Supported Input Formats
+
+- `.mkv` (Matroska)
+- `.m4v` (MPEG-4 / iTunes)
+
+All input formats are remuxed into an **MKV** container. ffprobe and mkvmerge handle both formats natively.
 
 ## Batch Processing
 
 When asked to process a folder:
-1. List all `.mkv` files found (recursive only if asked).
+1. List all `.mkv` and `.m4v` files found (recursive only if asked).
 2. Process them one by one.
 3. Print a summary at the end: files processed, total size saved, any errors.
 
@@ -103,7 +127,7 @@ When asked to process a folder:
 
 ## Report Files
 
-After cleaning each file, write a markdown report to `cleaned/<name>.<year>.md` (same base name as the cleaned MKV). The report documents what was done and why.
+After cleaning each file, write a markdown report to `cleaned/<basename>.md` (same base name as the cleaned MKV, without the `.mkv` extension). The report documents what was done and why.
 
 **Report format:**
 
