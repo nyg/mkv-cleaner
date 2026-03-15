@@ -6,7 +6,7 @@ The agent uses `ffprobe` to analyze each file, then constructs and runs an `mkvm
 
 ## What it does
 
-- **Audio**: keeps only English tracks by default (configurable per-run); picks the highest quality one (TrueHD Atmos > DTS-HD MA > EAC3 > AC3 > AAC …). Commentary tracks are automatically excluded.
+- **Audio**: keeps only English tracks by default (configurable per-run); picks the highest quality one (TrueHD Atmos > DTS-HD MA > EAC3 > AC3 > AAC …). Commentary tracks are excluded unless keeping one is required to avoid having zero audio tracks in the selected language.
 - **Subtitles**: keeps only English tracks (all variants: regular, forced, SDH)
 - **Video**: untouched, never re-encoded
 - **Chapters**: always preserved
