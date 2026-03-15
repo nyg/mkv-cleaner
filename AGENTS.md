@@ -105,12 +105,6 @@ Inspect the original filename for a season/episode pattern (`S01E02`, `s1e3`, `1
   - `Breaking.Bad.S05E16.Felina.2160p.WEB-DL.mkv` → `cleaned/Breaking.Bad.S05E16.Felina.mkv`
   - `The.Office.US.S03E01.720p.mkv` → `cleaned/The.Office.US.S03E01.mkv`
 
-### Report files
-
-The report uses the same base name as the cleaned file: `cleaned/<basename>.md`.
-
-Never overwrite the source file.
-
 ## Supported Input Formats
 
 - `.mkv` (Matroska)
@@ -133,7 +127,7 @@ When asked to process a folder:
 
 ## Report Files
 
-After cleaning each file, write a markdown report to `cleaned/<name>.<year>.md` (same base name as the cleaned MKV). The report documents what was done and why.
+After cleaning each file, write a markdown report to `cleaned/<basename>.md` (same base name as the cleaned MKV, without the `.mkv` extension). The report documents what was done and why.
 
 **Report format:**
 
