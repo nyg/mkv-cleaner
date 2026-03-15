@@ -25,5 +25,7 @@ copilot -p "$PROMPT" \
   --allow-tool='shell(command:*)' \
   --allow-tool='shell(ls:*)' \
   --allow-tool='shell(mkdir:*)' \
+  --allow-tool='shell(jq:*)' \
+  --allow-tool='shell(cat:*)' \
   --allow-tool='read' \
   --allow-tool='write'
