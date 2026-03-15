@@ -6,7 +6,7 @@
 set -eu
 
 TARGET="${1:-$(pwd)}"
-PROMPT="Clean all MKV files in: $TARGET"
+PROMPT="Clean all MKV and M4V files in: $TARGET"
 
 if ! command -v copilot >/dev/null 2>&1; then
   echo "ERROR: GitHub Copilot CLI not found." >&2
