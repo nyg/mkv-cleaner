@@ -17,7 +17,9 @@ if ! command -v copilot >/dev/null 2>&1; then
   exit 1
 fi
 
-copilot -p "$PROMPT" \
+copilot \
+  --model gpt-4.1 \
+  --prompt "$PROMPT" \
   --add-dir "$TARGET" \
   --allow-tool='shell(ffprobe:*)' \
   --allow-tool='shell(mkvmerge:*)' \
