@@ -243,6 +243,8 @@ gh workflow run release.yml -f bump=minor
 
 It bumps `version` in the three `plugin.json` files together, commits `chore: release <version>` to `master`, tags `mkv-cleaner--v<version>` and cuts a GitHub release with generated notes. `bump` takes `patch`, `minor` or `major`; `-f version=2.0.0` sets an exact version instead, and `-f dry_run=true` computes and validates everything without pushing anything.
 
+That commit goes straight to `master`, which the branch ruleset otherwise reserves for pull requests, so the workflow pushes with the `RELEASE_TOKEN` secret: a fine-grained personal access token on this repository with `Contents: Read and write`, owned by a repository admin, since admins are the ruleset's bypass actor. Without the secret the workflow stops before it commits anything. `GITHUB_TOKEN` cannot be used here — GitHub Actions is not allowed as a bypass actor on a user-owned repository.
+
 The version bump is the step that matters: a user's `plugin update` is a no-op if the version has not moved. `check.yml` fails the build if the three manifests ever disagree on it.
 
 Doing it by hand instead means editing those three files, then:
