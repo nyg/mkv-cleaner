@@ -102,6 +102,38 @@ Pick a model with `--model <model>`. Claude Code defaults to `claude-sonnet-5` a
 ./mkv-clean.sh --harness claude --model claude-opus-5 /path/to/your/movies
 ```
 
+Keep another language than English with `--lang <code>`, comma-separated for several. It replaces English as the target language for both audio and subtitles; two- and three-letter codes both work.
+
+```bash
+./mkv-clean.sh --lang fr /path/to/your/movies
+./mkv-clean.sh --lang jpn,eng /path/to/your/movies
+```
+
+Audio and subtitles can target different languages: `--audio-lang <code>` and `--sub-lang <code>` (alias `--subtitle-lang`) set them independently, and either one overrides `--lang` for its own stream type. Anything you leave unset stays English.
+
+```bash
+./mkv-clean.sh --audio-lang jpn --sub-lang eng /path/to/your/movies
+./mkv-clean.sh --lang fr --sub-lang fre,eng /path/to/your/movies
+```
+
+Every run ends with a summary of what it cost:
+
+```
+--- Run summary ---
+Harness:  claude
+Model:    claude-sonnet-5-20250929
+Input:    36 tokens
+Output:   1132 tokens
+Cache:    22445 written, 144288 read
+Cost:     $0.065
+Resume:   claude --resume 8d238bd5-ee73-4bf7-880b-d02a91eeec5c
+Duration: 18s
+```
+
+Claude Code reports the model that actually answered — which is not always the one you asked for, after a fallback — along with token counts and cost. The other harnesses only get a token line if their own output prints one; otherwise the summary says so and shows the model you requested.
+
+The resume command is worth keeping. The launcher runs the agent from the mkv-cleaner checkout so the skill is in scope, so the session is filed under that folder and `/resume` will not list it from your movie folder. Resuming by id works from anywhere.
+
 **Or prompt your agent directly:**
 
 ```bash
