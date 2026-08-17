@@ -116,6 +116,21 @@ Audio and subtitles can target different languages: `--audio-lang <code>` and `-
 ./mkv-clean.sh --lang fr --sub-lang fre,eng /path/to/your/movies
 ```
 
+Every run ends with a summary of what it cost:
+
+```
+--- Run summary ---
+Harness:  claude
+Model:    claude-sonnet-5-20250929
+Input:    36 tokens
+Output:   1132 tokens
+Cache:    22445 written, 144288 read
+Cost:     $0.065
+Duration: 18s
+```
+
+Claude Code reports the model that actually answered — which is not always the one you asked for, after a fallback — along with token counts and cost. The other harnesses only get a token line if their own output prints one; otherwise the summary says so and shows the model you requested.
+
 **Or prompt your agent directly:**
 
 ```bash

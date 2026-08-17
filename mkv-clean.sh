@@ -151,30 +151,82 @@ echo "Audio:   $AUDIO_LANG"
 echo "Subs:    $SUB_LANG"
 echo "Target:  $TARGET"
 
+RUN_LOG=$(mktemp "${TMPDIR:-/tmp}/mkv-clean.XXXXXX")
+trap 'rm -f "$RUN_LOG"' EXIT INT TERM
+
+STARTED_AT=$(date +%s)
+
 case "$HARNESS" in
   copilot)
     if [ -n "$MODEL" ]; then
-      copilot --prompt "$PROMPT" --add-dir "$TARGET" --allow-all --model "$MODEL"
+      copilot --prompt "$PROMPT" --add-dir "$TARGET" --allow-all --model "$MODEL" | tee "$RUN_LOG"
     else
-      copilot --prompt "$PROMPT" --add-dir "$TARGET" --allow-all
+      copilot --prompt "$PROMPT" --add-dir "$TARGET" --allow-all | tee "$RUN_LOG"
     fi
     ;;
   claude)
     claude --print "$PROMPT" --add-dir "$TARGET" --dangerously-skip-permissions \
-      --model "$MODEL" --effort "$CLAUDE_DEFAULT_EFFORT"
+      --model "$MODEL" --effort "$CLAUDE_DEFAULT_EFFORT" \
+      --output-format stream-json --verbose \
+      | tee "$RUN_LOG" \
+      | jq -j --unbuffered '
+          select(.type == "assistant") | .message.content[]? |
+          if .type == "text" then .text + "\n"
+          elif .type == "tool_use" then
+            "· " + .name +
+            (if (.input.command? | type) == "string" then ": " + (.input.command | split("\n")[0]) else "" end) +
+            "\n"
+          else empty end'
     ;;
   codex)
     if [ -n "$MODEL" ]; then
-      codex exec --cd "$TARGET" --sandbox workspace-write --skip-git-repo-check --model "$MODEL" "$PROMPT"
+      codex exec --cd "$TARGET" --sandbox workspace-write --skip-git-repo-check --model "$MODEL" "$PROMPT" | tee "$RUN_LOG"
     else
-      codex exec --cd "$TARGET" --sandbox workspace-write --skip-git-repo-check "$PROMPT"
+      codex exec --cd "$TARGET" --sandbox workspace-write --skip-git-repo-check "$PROMPT" | tee "$RUN_LOG"
     fi
     ;;
   opencode)
     if [ -n "$MODEL" ]; then
-      opencode run --dir "$TARGET" --auto --model "$MODEL" "$PROMPT"
+      opencode run --dir "$TARGET" --auto --model "$MODEL" "$PROMPT" | tee "$RUN_LOG"
     else
-      opencode run --dir "$TARGET" --auto "$PROMPT"
+      opencode run --dir "$TARGET" --auto "$PROMPT" | tee "$RUN_LOG"
     fi
     ;;
 esac
+
+ELAPSED=$(( $(date +%s) - STARTED_AT ))
+
+echo ""
+echo "--- Run summary ---"
+echo "Harness:  $HARNESS"
+
+CLAUDE_RESULT=""
+if [ "$HARNESS" = claude ]; then
+  CLAUDE_RESULT=$(jq -c 'select(.type == "result")' "$RUN_LOG" 2>/dev/null | tail -n 1)
+fi
+
+if [ -n "$CLAUDE_RESULT" ]; then
+  printf '%s' "$CLAUDE_RESULT" | jq -r '
+    (.modelUsage // {}) as $usage |
+    ([$usage | keys[]] | join(", ")) as $models |
+    def total(f): ([$usage[] | f] | add) // 0;
+    "Model:    " + (if $models == "" then "unknown" else $models end),
+    "Input:    " + (total(.inputTokens) | tostring) + " tokens",
+    "Output:   " + (total(.outputTokens) | tostring) + " tokens",
+    "Cache:    " + (total(.cacheCreationInputTokens) | tostring) + " written, "
+                 + (total(.cacheReadInputTokens) | tostring) + " read",
+    "Cost:     $" + ((.total_cost_usd // 0) * 10000 | round / 10000 | tostring)'
+else
+  echo "Model:    ${MODEL:-<harness default>} (requested)"
+  TOKEN_LINES=$(grep -iE 'tokens? (used|usage)|total tokens|token count' "$RUN_LOG" 2>/dev/null | tail -n 3 || true)
+  if [ -n "$TOKEN_LINES" ]; then
+    echo "Tokens:"
+    printf '%s\n' "$TOKEN_LINES" | sed 's/^/  /'
+  elif [ "$HARNESS" = claude ]; then
+    echo "Tokens:   unavailable, the run ended without a result event"
+  else
+    echo "Tokens:   not reported by $HARNESS"
+  fi
+fi
+
+echo "Duration: ${ELAPSED}s"
