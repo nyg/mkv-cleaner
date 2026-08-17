@@ -1,7 +1,8 @@
 #!/usr/bin/env sh
 # mkv-clean.sh
 # Convenience wrapper to launch the MKV cleaner agent.
-# Usage: ./mkv-clean.sh [--harness copilot|claude|codex|opencode] [--model <model>] [--lang <code>[,<code>…]] [target-folder]
+# Usage: ./mkv-clean.sh [--harness copilot|claude|codex|opencode] [--model <model>]
+#          [--lang <code>[,<code>…]] [--audio-lang <code>[,<code>…]] [--sub-lang <code>[,<code>…]] [target-folder]
 
 set -eu
 
@@ -9,6 +10,8 @@ SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 HARNESS=""
 MODEL=""
 TARGET_LANG=""
+AUDIO_LANG=""
+SUB_LANG=""
 CLAUDE_DEFAULT_MODEL="claude-sonnet-5"
 CLAUDE_DEFAULT_EFFORT="high"
 
@@ -39,6 +42,28 @@ while [ $# -gt 0 ]; do
       ;;
     --lang=*)
       TARGET_LANG="${1#--lang=}"
+      shift
+      ;;
+    --audio-lang)
+      [ $# -ge 2 ] || { echo "ERROR: --audio-lang needs a value." >&2; exit 1; }
+      AUDIO_LANG="$2"
+      shift 2
+      ;;
+    --audio-lang=*)
+      AUDIO_LANG="${1#--audio-lang=}"
+      shift
+      ;;
+    --sub-lang|--subtitle-lang)
+      [ $# -ge 2 ] || { echo "ERROR: $1 needs a value." >&2; exit 1; }
+      SUB_LANG="$2"
+      shift 2
+      ;;
+    --sub-lang=*)
+      SUB_LANG="${1#--sub-lang=}"
+      shift
+      ;;
+    --subtitle-lang=*)
+      SUB_LANG="${1#--subtitle-lang=}"
       shift
       ;;
     *)
@@ -104,9 +129,16 @@ cd "$SCRIPT_DIR"
 
 PROMPT="Use the mkv-cleaner skill. Clean all MKV and M4V files in: $TARGET"
 
-if [ -n "$TARGET_LANG" ]; then
+[ -n "$AUDIO_LANG" ] || AUDIO_LANG="$TARGET_LANG"
+[ -n "$SUB_LANG" ] || SUB_LANG="$TARGET_LANG"
+[ -n "$AUDIO_LANG" ] || AUDIO_LANG="eng"
+[ -n "$SUB_LANG" ] || SUB_LANG="eng"
+
+if [ "$AUDIO_LANG" != eng ] || [ "$SUB_LANG" != eng ]; then
   PROMPT="$PROMPT
-The target language is $TARGET_LANG instead of English: keep only audio and subtitle tracks whose language is $TARGET_LANG, and drop every other language."
+The target language for audio is $AUDIO_LANG and the target language for subtitles is $SUB_LANG. These two are set separately and may differ, so never let one decide the other.
+For audio, apply the usual audio rules to the $AUDIO_LANG tracks and drop every other language.
+For subtitles, keep the $SUB_LANG tracks and drop every other language."
 fi
 
 if [ -z "$MODEL" ] && [ "$HARNESS" = claude ]; then
@@ -115,7 +147,8 @@ fi
 
 echo "Harness: $HARNESS"
 echo "Model:   ${MODEL:-<harness default>}"
-echo "Lang:    ${TARGET_LANG:-eng}"
+echo "Audio:   $AUDIO_LANG"
+echo "Subs:    $SUB_LANG"
 echo "Target:  $TARGET"
 
 case "$HARNESS" in

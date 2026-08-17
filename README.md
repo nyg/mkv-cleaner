@@ -109,6 +109,13 @@ Keep another language than English with `--lang <code>`, comma-separated for sev
 ./mkv-clean.sh --lang jpn,eng /path/to/your/movies
 ```
 
+Audio and subtitles can target different languages: `--audio-lang <code>` and `--sub-lang <code>` (alias `--subtitle-lang`) set them independently, and either one overrides `--lang` for its own stream type. Anything you leave unset stays English.
+
+```bash
+./mkv-clean.sh --audio-lang jpn --sub-lang eng /path/to/your/movies
+./mkv-clean.sh --lang fr --sub-lang fre,eng /path/to/your/movies
+```
+
 **Or prompt your agent directly:**
 
 ```bash
