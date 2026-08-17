@@ -5,8 +5,26 @@
 
 set -eu
 
+SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 TARGET="${1:-$(pwd)}"
-PROMPT="Clean all MKV and M4V files in: $TARGET"
+
+case "$TARGET" in /*) ;; *) TARGET="$(pwd)/$TARGET" ;; esac
+
+if [ ! -d "$TARGET" ]; then
+  echo "ERROR: not a folder: $TARGET" >&2
+  exit 1
+fi
+
+for tool in mkvmerge ffprobe jq; do
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    echo "ERROR: $tool not found." >&2
+    echo "" >&2
+    echo "Install it:" >&2
+    echo "  brew install mkvtoolnix ffmpeg jq          # macOS" >&2
+    echo "  sudo apt install mkvtoolnix ffmpeg jq      # Debian / Ubuntu" >&2
+    exit 1
+  fi
+done
 
 if ! command -v copilot >/dev/null 2>&1; then
   echo "ERROR: GitHub Copilot CLI not found." >&2
@@ -17,17 +35,11 @@ if ! command -v copilot >/dev/null 2>&1; then
   exit 1
 fi
 
+cd "$SCRIPT_DIR"
+
+PROMPT="Clean all MKV and M4V files in: $TARGET"
+
 copilot \
-  --model gpt-4.1 \
   --prompt "$PROMPT" \
   --add-dir "$TARGET" \
-  --allow-tool='shell(ffprobe:*)' \
-  --allow-tool='shell(mkvmerge:*)' \
-  --allow-tool='shell(ffmpeg:*)' \
-  --allow-tool='shell(command:*)' \
-  --allow-tool='shell(ls:*)' \
-  --allow-tool='shell(mkdir:*)' \
-  --allow-tool='shell(jq:*)' \
-  --allow-tool='shell(cat:*)' \
-  --allow-tool='read' \
-  --allow-tool='write'
+  --allow-all
