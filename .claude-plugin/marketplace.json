@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "mkv-cleaner",
-  "description": "An AI agent that cleans MKV and M4V files by remuxing them, never re-encoding.",
+  "description": "An AI agent that cleans MKV, M4V and M2TS files by remuxing them, never re-encoding.",
   "owner": {
     "name": "nyg",
     "url": "https://github.com/nyg"

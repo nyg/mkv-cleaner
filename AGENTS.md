@@ -45,7 +45,7 @@ If any command says `No such file or directory`, you have mistyped a name. Run `
 Probe every file with a single command:
 
 ```bash
-for f in *.mkv *.m4v; do
+for f in *.mkv *.m4v *.m2ts; do
   [ -f "$f" ] || continue
   echo "== $f"
   mkvmerge -J "$f" | jq -r '.tracks[] | [.id, .type, .codec, (.properties.language // "und"), (.properties.audio_channels // "-"), (.properties.track_name // "-")] | @tsv'
@@ -107,7 +107,7 @@ OUTPUT=
 
 1. Drop every track whose `NAME` contains "commentary" (any capitalisation). Exception: if that would leave zero audio tracks, keep the commentary tracks and warn the user.
 2. Of the tracks that are left, keep only the **single best** one by the ranking table.
-3. Additionally, always keep any track whose `LANG` is `und` or empty, and warn the user — it may be the only real audio.
+3. Additionally, always keep any track whose `LANG` is `und` or empty, and warn the user — it may be the only real audio. Exception: if **every** audio track in the file is `und` (common in `.m2ts`), keep only the best one by ranking and warn instead.
 4. If no track matches the target language at all, keep **all** audio tracks and warn the user.
 
 **Subtitles** — keep every subtitle track in the target language: regular, forced and SDH alike. Also keep `und` tracks, with a warning. Keeping zero subtitles is normal and needs no warning.
@@ -136,7 +136,7 @@ English (`eng` / `en`) unless the user asked for something else in their prompt.
 
 ### Output name
 
-The file goes into a `cleaned/` folder next to the original, and the name always ends in `.mkv`, including for `.m4v` input.
+The file goes into a `cleaned/` folder next to the original, and the name always ends in `.mkv`, including for `.m4v` and `.m2ts` input.
 
 First decide what it is: if the filename contains a season/episode marker (`S01E02`, `s1e3`, `1x02`) it is a **series episode**, otherwise it is a **movie**.
 
@@ -152,6 +152,8 @@ The year is a 4-digit number between 1900 and 2099. If the name contains two of 
 
 The series name is everything before the marker, cleaned the same way. Pad the marker to `SxxExx` (`s1e3` → `S01E03`, `1x02` → `S01E02`). The episode name is what sits between the marker and the first junk tag; if there is nothing there, leave it out.
 
+**A name with no title in it** — Blu-ray streams are often called `00800.m2ts`, `00001.m2ts`. Once the junk tags are cut, nothing is left but digits, so there is no title to look up and no year to find. Do not invent one and do not name the output after the number: skip that file, and tell the user to re-run with the title, e.g. "clean 00800.m2ts as Heat (1995)". If the user did give a title, use it and clean it with the normal rules.
+
 | Original | Output |
 |----------|--------|
 | `Eden.2024.2160p.DV.HDR.HEVC.EAC3-NewTeam.mkv` | `cleaned/Eden.2024.mkv` |
@@ -160,6 +162,8 @@ The series name is everything before the marker, cleaned the same way. Pad the m
 | `Breaking.Bad.S05E16.Felina.2160p.WEB-DL.mkv` | `cleaned/Breaking.Bad.S05E16.Felina.mkv` |
 | `The.Office.US.S03E01.720p.mkv` | `cleaned/The.Office.US.S03E01.mkv` |
 | `Movie.2019.m4v` | `cleaned/Movie.2019.mkv` |
+| `Heat.1995.BluRay.REMUX.m2ts` | `cleaned/Heat.1995.mkv` |
+| `00800.m2ts` | skipped — no title in the name, ask the user |
 
 ---
 
@@ -357,7 +361,7 @@ Probe the whole folder in one command (step 1), write every worksheet in one mes
 
 Never write a loop that derives the output filename from the input filename. Naming is a per-file decision from step 2, and a loop always gets it wrong. Writing eight `mkvmerge` lines out by hand is correct and expected; a `for` loop over the files is not.
 
-Only go into subfolders if the user asked for it. After step 0, that is `find . -type f \( -iname '*.mkv' -o -iname '*.m4v' \) -not -path './cleaned/*'`; otherwise the plain `*.mkv *.m4v` of step 1 is right.
+Only go into subfolders if the user asked for it. After step 0, that is `find . -type f \( -iname '*.mkv' -o -iname '*.m4v' -o -iname '*.m2ts' \) -not -path './cleaned/*'`; otherwise the plain `*.mkv *.m4v *.m2ts` of step 1 is right.
 
 At the end, print a summary: files processed, files skipped and why, total size saved, every warning, and any file you could not handle.
 
@@ -370,4 +374,12 @@ At the end, print a summary: files processed, files skipped and why, total size 
 
 ## Supported input
 
-`.mkv` (Matroska) and `.m4v` (MPEG-4 / iTunes). Both are remuxed into an MKV container. mkvmerge and ffprobe read both natively.
+`.mkv` (Matroska), `.m4v` (MPEG-4 / iTunes) and `.m2ts` (Blu-ray BDAV transport stream). All three are remuxed into an MKV container. mkvmerge and ffprobe read all three natively, and every step above works unchanged — same probe, same track IDs, same command.
+
+Three things are different about `.m2ts` in practice, and all three are handled by rules you already have:
+
+- **Languages are often `und`.** A transport stream carries no language metadata unless the muxer wrote a descriptor. If **every** audio track in the file is `und`, do not apply the "keep all `und` tracks" rule — that would keep the whole disc. Rank them normally, keep the single best one, and warn the user that the languages are undefined and the pick was made on codec and channels alone. When only *some* tracks are `und`, the normal rule applies unchanged.
+- **No chapters.** On a Blu-ray the chapter marks live in the `.mpls` playlist, not in the stream, so a cleaned `.m2ts` usually has none. That is expected, not an error, and it is not a reason to add any chapter option.
+- **Names carry no title.** See the naming rule for `00800.m2ts` above.
+
+A folder of `.m2ts` files is often a `BDMV/STREAM/` directory full of junk streams — menus, trailers, a few seconds each. Clean the ones the user asked for; do not treat the whole folder as a batch of movies unless the names say so.

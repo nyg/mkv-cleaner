@@ -1,7 +1,7 @@
 {
   "name": "mkv-cleaner",
-  "version": "1.0.0",
-  "description": "Cleans MKV and M4V files by remuxing them with mkvmerge: keeps the best audio track in your language, drops commentary and foreign tracks, strips attachments and metadata junk, renames the output.",
+  "version": "1.1.0",
+  "description": "Cleans MKV, M4V and M2TS files by remuxing them with mkvmerge: keeps the best audio track in your language, drops commentary and foreign tracks, strips attachments and metadata junk, renames the output.",
   "author": {
     "name": "nyg",
     "url": "https://github.com/nyg"
@@ -9,7 +9,7 @@
   "homepage": "https://github.com/nyg/mkv-cleaner",
   "repository": "https://github.com/nyg/mkv-cleaner",
   "license": "MIT",
-  "keywords": ["mkv", "mkvmerge", "mkvtoolnix", "ffmpeg", "remux", "video"],
+  "keywords": ["mkv", "m4v", "m2ts", "bluray", "mkvmerge", "mkvtoolnix", "ffmpeg", "remux", "video"],
   "skills": "./skills/",
   "interface": {
     "displayName": "MKV Cleaner",
@@ -21,7 +21,7 @@
     "websiteURL": "https://github.com/nyg/mkv-cleaner",
     "defaultPrompt": [
       "Clean all MKVs in ~/Movies",
-      "Clean all MKVs and M4Vs in ~/Movies recursively",
+      "Clean all MKVs, M4Vs and M2TS files in ~/Movies recursively",
       "Clean all MKVs here but keep French audio too"
     ]
   }

@@ -12,7 +12,7 @@ The agent uses `ffprobe` to analyze each file, then constructs and runs an `mkvm
 - **Chapters**: always preserved
 - **Attachments**: removed (fonts, cover art, thumbnails)
 - **Metadata**: statistics tags and encoding tool junk stripped
-- **Input formats**: `.mkv` and `.m4v` — both are remuxed into MKV
+- **Input formats**: `.mkv`, `.m4v` and `.m2ts` (Blu-ray streams) — all remuxed into MKV
 - **Output naming**:
   - Movies: `Title.Year.mkv` in a `cleaned/` subfolder
   - Series episodes: `Series.Name.SxxExx.Episode.Name.mkv` (no year) in a `cleaned/` subfolder
@@ -86,6 +86,53 @@ git clone https://github.com/nyg/mkv-cleaner && cd mkv-cleaner
 copilot   # or claude, codex, opencode
 ```
 
+## Update
+
+Installing a plugin pins the copy you got that day; new versions do not arrive on their own. Updating is always two steps: refresh the marketplace catalog, then update the plugin itself. Claude Code and Copilot CLI need a restart of the session afterwards.
+
+### Claude Code
+
+```
+/plugin marketplace update mkv-cleaner
+```
+```
+/plugin update mkv-cleaner@mkv-cleaner
+```
+
+Same thing from a shell, outside a session:
+
+```bash
+claude plugin marketplace update mkv-cleaner && claude plugin update mkv-cleaner@mkv-cleaner
+```
+
+`claude plugin list` shows the installed version, and `claude plugin marketplace update` with no name refreshes every marketplace you have added.
+
+### GitHub Copilot CLI
+
+```bash
+copilot plugin marketplace update mkv-cleaner && copilot plugin update mkv-cleaner@mkv-cleaner
+```
+
+`copilot plugin update --all` updates every installed plugin instead. The slash equivalents work inside an interactive session.
+
+### Codex
+
+Codex mirrors the same pair of subcommands:
+
+```bash
+codex plugin marketplace update mkv-cleaner && codex plugin update mkv-cleaner@mkv-cleaner
+```
+
+If your Codex build names them differently, `codex plugin --help` lists what it has; re-running `codex plugin add mkv-cleaner@mkv-cleaner` also picks up the newer version.
+
+### Symlink install, checkout, or OpenCode
+
+Nothing to update — those all read the skill out of the checkout, so a `git pull` is the whole update:
+
+```bash
+cd /path/to/mkv-cleaner && git pull
+```
+
 ## Usage
 
 **Use the convenience script:**
@@ -138,7 +185,7 @@ The resume command is worth keeping. The launcher runs the agent from the mkv-cl
 
 ```bash
 copilot "clean Movie.mkv"
-claude "clean all MKVs and M4Vs in ~/Movies recursively"
+claude "clean all MKVs, M4Vs and M2TS files in ~/Movies recursively"
 codex "clean all MKVs in ~/Movies/Series/Season1 recursively"
 opencode run --auto "clean all MKVs here but keep French audio too"
 ```
@@ -151,6 +198,8 @@ opencode run --auto "clean all MKVs here but keep French audio too"
 | `Dexter S01E02 Crocodile 1080p BluRay x264-GROUP.mkv` | `cleaned/Dexter.S01E02.Crocodile.mkv` |
 | `Breaking.Bad.S05E16.Felina.2160p.WEB-DL.mkv` | `cleaned/Breaking.Bad.S05E16.Felina.mkv` |
 | `Movie.2019.m4v` | `cleaned/Movie.2019.mkv` |
+| `Heat.1995.BluRay.REMUX.m2ts` | `cleaned/Heat.1995.mkv` |
+| `00800.m2ts` | skipped — no title in the name, tell the agent what it is |
 
 ## Repo structure
 
@@ -178,3 +227,25 @@ The behaviour lives in `skills/mkv-cleaner/SKILL.md`, in the [Agent Skills](http
 ## Editing the prompt
 
 Edit `skills/mkv-cleaner/SKILL.md` — it is the single source of truth — then run `./scripts/sync-agents-md.sh` to regenerate `AGENTS.md`. CI fails if the two drift apart.
+
+## Releasing a new version of the plugin
+
+The behaviour change is one file; shipping it to installed plugins is the rest of this list.
+
+1. Edit `skills/mkv-cleaner/SKILL.md`, then `./scripts/sync-agents-md.sh`.
+2. If the change affects what the plugin claims to do, update the `description` in all five manifests (`.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, `.github/plugin/plugin.json`, `.github/plugin/marketplace.json`) and the `description` in the skill's front matter — that front matter is what makes the agent pick the skill up, so a new input format or flag belongs in it.
+3. Bump `version` in the three `plugin.json` files, together. A user's `plugin update` is a no-op if the version has not moved.
+4. Validate and push:
+
+```bash
+claude plugin validate . && ./scripts/sync-agents-md.sh --check
+```
+
+5. Push to `master`. `.agents/plugins/marketplace.json` pins `ref: master`, so that is what installs fetch.
+6. Optionally tag the release — `claude plugin tag` checks that `plugin.json` and the marketplace entry agree on the version before tagging:
+
+```bash
+claude plugin tag .
+```
+
+Then test the update path itself from a real install: `claude plugin marketplace update mkv-cleaner && claude plugin update mkv-cleaner@mkv-cleaner`, restart, and confirm `claude plugin list` shows the new version.

@@ -127,7 +127,7 @@ fi
 
 cd "$SCRIPT_DIR"
 
-PROMPT="Use the mkv-cleaner skill. Clean all MKV and M4V files in: $TARGET"
+PROMPT="Use the mkv-cleaner skill. Clean all MKV, M4V and M2TS files in: $TARGET"
 
 [ -n "$AUDIO_LANG" ] || AUDIO_LANG="$TARGET_LANG"
 [ -n "$SUB_LANG" ] || SUB_LANG="$TARGET_LANG"
