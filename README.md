@@ -1,6 +1,6 @@
 # mkv-cleaner
 
-An AI agent for cleaning MKV files using [GitHub Copilot CLI](https://docs.github.com/copilot/how-tos/copilot-cli).
+An AI agent for cleaning MKV files. It runs in Claude Code, Codex, GitHub Copilot CLI and OpenCode from the same instruction file.
 
 The agent uses `ffprobe` to analyze each file, then constructs and runs an `mkvmerge` (or `ffmpeg`) command to strip unwanted streams — no re-encoding, just a fast lossless remux.
 
@@ -28,14 +28,62 @@ brew install mkvtoolnix ffmpeg jq
 sudo apt install mkvtoolnix ffmpeg jq
 ```
 
-You also need [GitHub Copilot CLI](https://docs.github.com/copilot/how-tos/copilot-cli):
+Plus one agent CLI: [Claude Code](https://claude.ai/code), [Codex](https://developers.openai.com/codex), [GitHub Copilot CLI](https://docs.github.com/copilot/how-tos/copilot-cli) or [OpenCode](https://opencode.ai).
+
+## Install
+
+### Any harness, from any folder
 
 ```bash
-# macOS / Linux
-curl -fsSL https://gh.io/copilot-install | bash
+git clone https://github.com/nyg/mkv-cleaner && ./mkv-cleaner/install.sh
+```
 
-# or with Homebrew
-brew install copilot-cli
+Symlinks the skill into `~/.agents/skills/` (Codex, Copilot CLI, OpenCode) and `~/.claude/skills/` (Claude Code, OpenCode). Undo with `./install.sh --uninstall`.
+
+### Claude Code
+
+Two separate prompts, in the CLI or the Desktop app's Code tab:
+
+```
+/plugin marketplace add nyg/mkv-cleaner
+```
+```
+/plugin install mkv-cleaner@mkv-cleaner
+```
+
+Then `/mkv-cleaner:mkv-cleaner clean all MKVs in ~/Movies`.
+
+### Codex
+
+```bash
+codex plugin marketplace add nyg/mkv-cleaner
+codex plugin add mkv-cleaner@mkv-cleaner
+```
+
+### GitHub Copilot CLI
+
+```bash
+copilot plugin marketplace add nyg/mkv-cleaner
+copilot plugin install mkv-cleaner@mkv-cleaner
+```
+
+The slash equivalents (`/plugin marketplace add …`, `/plugin install …`) work inside an interactive session.
+
+### OpenCode
+
+OpenCode has no plugin needed — `install.sh` above puts the skill where it already looks. Then:
+
+```bash
+opencode run --dir ~/Movies --auto "clean all MKVs here"
+```
+
+### No install at all
+
+Every harness in the list also reads skills straight out of a checkout:
+
+```bash
+git clone https://github.com/nyg/mkv-cleaner && cd mkv-cleaner
+copilot   # or claude, codex, opencode
 ```
 
 ## Usage
@@ -46,20 +94,15 @@ brew install copilot-cli
 ./mkv-clean.sh /path/to/your/movies
 ```
 
-**Or launch Copilot CLI directly from the repo root:**
+It picks the first agent CLI it finds on your PATH; force one with `--harness claude|codex|copilot|opencode`.
 
-```bash
-cd /path/to/mkv-cleaner
-copilot "clean all MKVs in /path/to/your/movies"
-```
-
-**Example prompts:**
+**Or prompt your agent directly:**
 
 ```bash
 copilot "clean Movie.mkv"
-copilot "clean all MKVs and M4Vs in ~/Movies recursively"
-copilot "clean all MKVs in ~/Movies/Series/Season1 recursively"
-copilot "clean all MKVs here but keep French audio too"
+claude "clean all MKVs and M4Vs in ~/Movies recursively"
+codex "clean all MKVs in ~/Movies/Series/Season1 recursively"
+opencode run --auto "clean all MKVs here but keep French audio too"
 ```
 
 ## Output examples
@@ -75,11 +118,25 @@ copilot "clean all MKVs here but keep French audio too"
 
 ```
 mkv-cleaner/
-├── README.md
-├── AGENTS.md              # Agent instructions — edit this to change behaviour
-└── mkv-clean.sh           # Convenience launcher (checks tools, then hands over to Copilot CLI)
+├── skills/mkv-cleaner/SKILL.md   # The agent. Everything else is packaging.
+├── AGENTS.md                     # Generated copy, always-on for agents in a checkout
+├── CLAUDE.md                     # Imports AGENTS.md for Claude Code
+├── mkv-clean.sh                  # Launcher (checks tools, picks a harness)
+├── install.sh                    # Symlinks the skill into your harnesses
+└── scripts/sync-agents-md.sh     # Regenerates AGENTS.md from the skill
 ```
+
+## Adapters
+
+The behaviour lives in `skills/mkv-cleaner/SKILL.md`, in the [Agent Skills](https://agentskills.io) format. Everything below is a thin adapter pointing back at it.
+
+| Harness | Files | Notes |
+|---------|-------|-------|
+| Claude Code | `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.claude/skills/` | Plugin install, or the `.claude/skills/` symlink in a checkout. Claude Code reads `CLAUDE.md`, never `AGENTS.md`, so `CLAUDE.md` imports it. |
+| Codex | `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json`, `.agents/skills/` | Plugin install, or the `.agents/skills/` symlink in a checkout. Also reads `AGENTS.md` at the repo root. |
+| GitHub Copilot CLI | `.github/plugin/plugin.json`, `.github/plugin/marketplace.json`, `.claude/skills/`, `.agents/skills/` | Plugin install, or either symlink in a checkout. Also reads `AGENTS.md` at the repo root. |
+| OpenCode | `.claude/skills/`, `.agents/skills/` | No adapter needed; OpenCode scans both paths in a project and `~/.claude/skills`, `~/.agents/skills` globally. |
 
 ## Editing the prompt
 
-Edit `AGENTS.md` directly — it is the single source of truth.
+Edit `skills/mkv-cleaner/SKILL.md` — it is the single source of truth — then run `./scripts/sync-agents-md.sh` to regenerate `AGENTS.md`. CI fails if the two drift apart.

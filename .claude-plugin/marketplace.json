@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "mkv-cleaner",
+  "description": "An AI agent that cleans MKV and M4V files by remuxing them, never re-encoding.",
+  "owner": {
+    "name": "nyg",
+    "url": "https://github.com/nyg"
+  },
+  "plugins": [
+    {
+      "name": "mkv-cleaner",
+      "description": "Keeps the best audio track in your language, drops commentary and foreign tracks, strips attachments and metadata junk, renames the output.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

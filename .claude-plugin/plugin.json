@@ -1,0 +1,13 @@
+{
+  "name": "mkv-cleaner",
+  "version": "1.0.0",
+  "description": "Cleans MKV and M4V files by remuxing them with mkvmerge: keeps the best audio track in your language, drops commentary and foreign tracks, strips attachments and metadata junk, renames the output.",
+  "author": {
+    "name": "nyg",
+    "url": "https://github.com/nyg"
+  },
+  "homepage": "https://github.com/nyg/mkv-cleaner",
+  "repository": "https://github.com/nyg/mkv-cleaner",
+  "license": "MIT",
+  "keywords": ["mkv", "mkvmerge", "mkvtoolnix", "ffmpeg", "remux", "video"]
+}
