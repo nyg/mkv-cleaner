@@ -1,11 +1,30 @@
 #!/usr/bin/env sh
 # mkv-clean.sh
 # Convenience wrapper to launch the MKV cleaner agent.
-# Usage: ./mkv-clean.sh [target-folder]
+# Usage: ./mkv-clean.sh [--harness copilot|claude|codex|opencode] [target-folder]
 
 set -eu
 
 SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
+HARNESS=""
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --harness)
+      [ $# -ge 2 ] || { echo "ERROR: --harness needs a value." >&2; exit 1; }
+      HARNESS="$2"
+      shift 2
+      ;;
+    --harness=*)
+      HARNESS="${1#--harness=}"
+      shift
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
 TARGET="${1:-$(pwd)}"
 
 case "$TARGET" in /*) ;; *) TARGET="$(pwd)/$TARGET" ;; esac
@@ -26,20 +45,57 @@ for tool in mkvmerge ffprobe jq; do
   fi
 done
 
-if ! command -v copilot >/dev/null 2>&1; then
-  echo "ERROR: GitHub Copilot CLI not found." >&2
+if [ -n "$HARNESS" ]; then
+  case "$HARNESS" in
+    copilot|claude|codex|opencode) ;;
+    *)
+      echo "ERROR: unknown harness: $HARNESS" >&2
+      echo "Pick one of: copilot, claude, codex, opencode" >&2
+      exit 1
+      ;;
+  esac
+  if ! command -v "$HARNESS" >/dev/null 2>&1; then
+    echo "ERROR: $HARNESS not found on PATH." >&2
+    exit 1
+  fi
+else
+  for candidate in copilot claude codex opencode; do
+    if command -v "$candidate" >/dev/null 2>&1; then
+      HARNESS="$candidate"
+      break
+    fi
+  done
+fi
+
+if [ -z "$HARNESS" ]; then
+  echo "ERROR: no supported agent CLI found." >&2
   echo "" >&2
-  echo "Install it:" >&2
-  echo "  curl -fsSL https://gh.io/copilot-install | bash" >&2
-  echo "  # or: brew install copilot-cli" >&2
+  echo "Install one of:" >&2
+  echo "  Claude Code       https://claude.ai/code" >&2
+  echo "  Codex             https://developers.openai.com/codex" >&2
+  echo "  Copilot CLI       curl -fsSL https://gh.io/copilot-install | bash" >&2
+  echo "  OpenCode          https://opencode.ai" >&2
   exit 1
 fi
 
 cd "$SCRIPT_DIR"
 
-PROMPT="Clean all MKV and M4V files in: $TARGET"
+PROMPT="Use the mkv-cleaner skill. Clean all MKV and M4V files in: $TARGET"
 
-copilot \
-  --prompt "$PROMPT" \
-  --add-dir "$TARGET" \
-  --allow-all
+echo "Harness: $HARNESS"
+echo "Target:  $TARGET"
+
+case "$HARNESS" in
+  copilot)
+    copilot --prompt "$PROMPT" --add-dir "$TARGET" --allow-all
+    ;;
+  claude)
+    claude --print "$PROMPT" --add-dir "$TARGET" --dangerously-skip-permissions
+    ;;
+  codex)
+    codex exec --cd "$TARGET" --sandbox workspace-write --skip-git-repo-check "$PROMPT"
+    ;;
+  opencode)
+    opencode run --dir "$TARGET" --auto "$PROMPT"
+    ;;
+esac

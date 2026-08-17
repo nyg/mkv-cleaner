@@ -1,0 +1,21 @@
+{
+  "name": "mkv-cleaner",
+  "interface": {
+    "displayName": "MKV Cleaner"
+  },
+  "plugins": [
+    {
+      "name": "mkv-cleaner",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/nyg/mkv-cleaner.git",
+        "ref": "master"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

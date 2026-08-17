@@ -1,0 +1,31 @@
+name: check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: AGENTS.md is in sync with the skill
+        run: ./scripts/sync-agents-md.sh --check
+
+      - name: Manifests are valid JSON
+        run: |
+          for f in .claude-plugin/plugin.json .claude-plugin/marketplace.json .codex-plugin/plugin.json .agents/plugins/marketplace.json .github/plugin/plugin.json .github/plugin/marketplace.json; do
+            jq -e .name "$f" > /dev/null
+          done
+
+      - name: Skill symlinks resolve
+        run: |
+          test -f .claude/skills/mkv-cleaner/SKILL.md
+          test -f .agents/skills/mkv-cleaner/SKILL.md
+
+      - name: Shell scripts parse
+        run: |
+          for f in install.sh mkv-clean.sh scripts/sync-agents-md.sh; do
+            sh -n "$f"
+          done
