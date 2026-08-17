@@ -1,6 +1,6 @@
 {
   "name": "mkv-cleaner",
-  "version": "1.1.0",
+  "version": "0.0.1",
   "description": "Cleans MKV, M4V and M2TS files by remuxing them with mkvmerge: keeps the best audio track in your language, drops commentary and foreign tracks, strips attachments and metadata junk, renames the output.",
   "author": {
     "name": "nyg",
