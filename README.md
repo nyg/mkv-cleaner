@@ -228,31 +228,4 @@ The behaviour lives in `skills/mkv-cleaner/SKILL.md`, in the [Agent Skills](http
 
 Edit `skills/mkv-cleaner/SKILL.md` — it is the single source of truth — then run `./scripts/sync-agents-md.sh` to regenerate `AGENTS.md`. CI fails if the two drift apart.
 
-## Releasing a new version of the plugin
-
-The behaviour change is one file; shipping it to installed plugins is the rest of this list.
-
-1. Edit `skills/mkv-cleaner/SKILL.md`, then `./scripts/sync-agents-md.sh`.
-2. If the change affects what the plugin claims to do, update the `description` in all five manifests (`.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, `.github/plugin/plugin.json`, `.github/plugin/marketplace.json`) and the `description` in the skill's front matter — that front matter is what makes the agent pick the skill up, so a new input format or flag belongs in it.
-3. Merge that to `master`. `.agents/plugins/marketplace.json` pins `ref: master`, so that is what installs fetch.
-4. Run the **release** workflow from the Actions tab, or:
-
-```bash
-gh workflow run release.yml -f bump=minor
-```
-
-It bumps `version` in the three `plugin.json` files together, commits `chore: release <version>` to `master`, tags `mkv-cleaner--v<version>` and cuts a GitHub release with generated notes. `bump` takes `patch`, `minor` or `major`; `-f version=2.0.0` sets an exact version instead, and `-f dry_run=true` computes and validates everything without pushing anything.
-
-That commit goes straight to `master`, which the branch ruleset otherwise reserves for pull requests, so the workflow pushes with the `RELEASE_TOKEN` secret: a fine-grained personal access token on this repository with `Contents: Read and write`, owned by a repository admin, since admins are the ruleset's bypass actor. Without the secret the workflow stops before it commits anything. `GITHUB_TOKEN` cannot be used here — GitHub Actions is not allowed as a bypass actor on a user-owned repository.
-
-The version bump is the step that matters: a user's `plugin update` is a no-op if the version has not moved. `check.yml` fails the build if the three manifests ever disagree on it.
-
-Doing it by hand instead means editing those three files, then:
-
-```bash
-claude plugin validate . && ./scripts/sync-agents-md.sh --check && claude plugin tag .
-```
-
-`claude plugin tag` checks that `plugin.json` and the marketplace entry agree on the version before tagging.
-
 Either way, test the update path from a real install afterwards: `claude plugin marketplace update mkv-cleaner && claude plugin update mkv-cleaner@mkv-cleaner`, restart, and confirm `claude plugin list` shows the new version.
