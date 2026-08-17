@@ -1,12 +1,15 @@
 #!/usr/bin/env sh
 # mkv-clean.sh
 # Convenience wrapper to launch the MKV cleaner agent.
-# Usage: ./mkv-clean.sh [--harness copilot|claude|codex|opencode] [target-folder]
+# Usage: ./mkv-clean.sh [--harness copilot|claude|codex|opencode] [--model <model>] [target-folder]
 
 set -eu
 
 SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 HARNESS=""
+MODEL=""
+CLAUDE_DEFAULT_MODEL="claude-sonnet-5"
+CLAUDE_DEFAULT_EFFORT="high"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -17,6 +20,15 @@ while [ $# -gt 0 ]; do
       ;;
     --harness=*)
       HARNESS="${1#--harness=}"
+      shift
+      ;;
+    --model)
+      [ $# -ge 2 ] || { echo "ERROR: --model needs a value." >&2; exit 1; }
+      MODEL="$2"
+      shift 2
+      ;;
+    --model=*)
+      MODEL="${1#--model=}"
       shift
       ;;
     *)
@@ -82,20 +94,38 @@ cd "$SCRIPT_DIR"
 
 PROMPT="Use the mkv-cleaner skill. Clean all MKV and M4V files in: $TARGET"
 
+if [ -z "$MODEL" ] && [ "$HARNESS" = claude ]; then
+  MODEL="$CLAUDE_DEFAULT_MODEL"
+fi
+
 echo "Harness: $HARNESS"
+echo "Model:   ${MODEL:-<harness default>}"
 echo "Target:  $TARGET"
 
 case "$HARNESS" in
   copilot)
-    copilot --prompt "$PROMPT" --add-dir "$TARGET" --allow-all
+    if [ -n "$MODEL" ]; then
+      copilot --prompt "$PROMPT" --add-dir "$TARGET" --allow-all --model "$MODEL"
+    else
+      copilot --prompt "$PROMPT" --add-dir "$TARGET" --allow-all
+    fi
     ;;
   claude)
-    claude --print "$PROMPT" --add-dir "$TARGET" --dangerously-skip-permissions
+    claude --print "$PROMPT" --add-dir "$TARGET" --dangerously-skip-permissions \
+      --model "$MODEL" --effort "$CLAUDE_DEFAULT_EFFORT"
     ;;
   codex)
-    codex exec --cd "$TARGET" --sandbox workspace-write --skip-git-repo-check "$PROMPT"
+    if [ -n "$MODEL" ]; then
+      codex exec --cd "$TARGET" --sandbox workspace-write --skip-git-repo-check --model "$MODEL" "$PROMPT"
+    else
+      codex exec --cd "$TARGET" --sandbox workspace-write --skip-git-repo-check "$PROMPT"
+    fi
     ;;
   opencode)
-    opencode run --dir "$TARGET" --auto "$PROMPT"
+    if [ -n "$MODEL" ]; then
+      opencode run --dir "$TARGET" --auto --model "$MODEL" "$PROMPT"
+    else
+      opencode run --dir "$TARGET" --auto "$PROMPT"
+    fi
     ;;
 esac

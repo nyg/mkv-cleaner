@@ -96,6 +96,12 @@ copilot   # or claude, codex, opencode
 
 It picks the first agent CLI it finds on your PATH; force one with `--harness claude|codex|copilot|opencode`.
 
+Pick a model with `--model <model>`. Claude Code defaults to `claude-sonnet-5` at high reasoning effort; the other harnesses use their own default model unless you pass `--model`.
+
+```bash
+./mkv-clean.sh --harness claude --model claude-opus-5 /path/to/your/movies
+```
+
 **Or prompt your agent directly:**
 
 ```bash
