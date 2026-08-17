@@ -234,18 +234,23 @@ The behaviour change is one file; shipping it to installed plugins is the rest o
 
 1. Edit `skills/mkv-cleaner/SKILL.md`, then `./scripts/sync-agents-md.sh`.
 2. If the change affects what the plugin claims to do, update the `description` in all five manifests (`.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.codex-plugin/plugin.json`, `.github/plugin/plugin.json`, `.github/plugin/marketplace.json`) and the `description` in the skill's front matter — that front matter is what makes the agent pick the skill up, so a new input format or flag belongs in it.
-3. Bump `version` in the three `plugin.json` files, together. A user's `plugin update` is a no-op if the version has not moved.
-4. Validate and push:
+3. Merge that to `master`. `.agents/plugins/marketplace.json` pins `ref: master`, so that is what installs fetch.
+4. Run the **release** workflow from the Actions tab, or:
 
 ```bash
-claude plugin validate . && ./scripts/sync-agents-md.sh --check
+gh workflow run release.yml -f bump=minor
 ```
 
-5. Push to `master`. `.agents/plugins/marketplace.json` pins `ref: master`, so that is what installs fetch.
-6. Optionally tag the release — `claude plugin tag` checks that `plugin.json` and the marketplace entry agree on the version before tagging:
+It bumps `version` in the three `plugin.json` files together, commits `chore: release <version>` to `master`, tags `mkv-cleaner--v<version>` and cuts a GitHub release with generated notes. `bump` takes `patch`, `minor` or `major`; `-f version=2.0.0` sets an exact version instead, and `-f dry_run=true` computes and validates everything without pushing anything.
+
+The version bump is the step that matters: a user's `plugin update` is a no-op if the version has not moved. `check.yml` fails the build if the three manifests ever disagree on it.
+
+Doing it by hand instead means editing those three files, then:
 
 ```bash
-claude plugin tag .
+claude plugin validate . && ./scripts/sync-agents-md.sh --check && claude plugin tag .
 ```
 
-Then test the update path itself from a real install: `claude plugin marketplace update mkv-cleaner && claude plugin update mkv-cleaner@mkv-cleaner`, restart, and confirm `claude plugin list` shows the new version.
+`claude plugin tag` checks that `plugin.json` and the marketplace entry agree on the version before tagging.
+
+Either way, test the update path from a real install afterwards: `claude plugin marketplace update mkv-cleaner && claude plugin update mkv-cleaner@mkv-cleaner`, restart, and confirm `claude plugin list` shows the new version.

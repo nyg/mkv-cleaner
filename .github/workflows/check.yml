@@ -19,6 +19,18 @@ jobs:
             jq -e .name "$f" > /dev/null
           done
 
+      - name: Plugin manifests agree on the version
+        run: |
+          expected=$(jq -r .version .claude-plugin/plugin.json)
+          for f in .codex-plugin/plugin.json .github/plugin/plugin.json; do
+            actual=$(jq -r .version "$f")
+            test "$actual" = "$expected" || {
+              echo "ERROR: $f is at $actual, .claude-plugin/plugin.json is at $expected" >&2
+              exit 1
+            }
+          done
+          echo "All plugin manifests are at $expected"
+
       - name: Skill symlinks resolve
         run: |
           test -f .claude/skills/mkv-cleaner/SKILL.md
