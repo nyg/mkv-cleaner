@@ -24,9 +24,20 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN || github.token }}
+
+      - name: A push token for master is configured
+        if: ${{ !inputs.dry_run }}
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          test -n "$RELEASE_TOKEN" || {
+            echo "ERROR: secret RELEASE_TOKEN is missing, master only accepts pushes that bypass the pull request rule" >&2
+            exit 1
+          }
 
       - name: Refuse to release from a branch other than master
         run: |
