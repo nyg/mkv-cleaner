@@ -215,7 +215,8 @@ if [ -n "$CLAUDE_RESULT" ]; then
     "Output:   " + (total(.outputTokens) | tostring) + " tokens",
     "Cache:    " + (total(.cacheCreationInputTokens) | tostring) + " written, "
                  + (total(.cacheReadInputTokens) | tostring) + " read",
-    "Cost:     $" + ((.total_cost_usd // 0) * 10000 | round / 10000 | tostring)'
+    "Cost:     $" + ((.total_cost_usd // 0) * 10000 | round / 10000 | tostring),
+    (if .session_id then "Resume:   claude --resume " + .session_id else empty end)'
 else
   echo "Model:    ${MODEL:-<harness default>} (requested)"
   TOKEN_LINES=$(grep -iE 'tokens? (used|usage)|total tokens|token count' "$RUN_LOG" 2>/dev/null | tail -n 3 || true)

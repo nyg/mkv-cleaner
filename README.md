@@ -126,10 +126,13 @@ Input:    36 tokens
 Output:   1132 tokens
 Cache:    22445 written, 144288 read
 Cost:     $0.065
+Resume:   claude --resume 8d238bd5-ee73-4bf7-880b-d02a91eeec5c
 Duration: 18s
 ```
 
 Claude Code reports the model that actually answered — which is not always the one you asked for, after a fallback — along with token counts and cost. The other harnesses only get a token line if their own output prints one; otherwise the summary says so and shows the model you requested.
+
+The resume command is worth keeping. The launcher runs the agent from the mkv-cleaner checkout so the skill is in scope, so the session is filed under that folder and `/resume` will not list it from your movie folder. Resuming by id works from anywhere.
 
 **Or prompt your agent directly:**
 
