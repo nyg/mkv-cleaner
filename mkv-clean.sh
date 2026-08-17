@@ -1,13 +1,14 @@
 #!/usr/bin/env sh
 # mkv-clean.sh
 # Convenience wrapper to launch the MKV cleaner agent.
-# Usage: ./mkv-clean.sh [--harness copilot|claude|codex|opencode] [--model <model>] [target-folder]
+# Usage: ./mkv-clean.sh [--harness copilot|claude|codex|opencode] [--model <model>] [--lang <code>[,<code>…]] [target-folder]
 
 set -eu
 
 SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 HARNESS=""
 MODEL=""
+TARGET_LANG=""
 CLAUDE_DEFAULT_MODEL="claude-sonnet-5"
 CLAUDE_DEFAULT_EFFORT="high"
 
@@ -29,6 +30,15 @@ while [ $# -gt 0 ]; do
       ;;
     --model=*)
       MODEL="${1#--model=}"
+      shift
+      ;;
+    --lang)
+      [ $# -ge 2 ] || { echo "ERROR: --lang needs a value." >&2; exit 1; }
+      TARGET_LANG="$2"
+      shift 2
+      ;;
+    --lang=*)
+      TARGET_LANG="${1#--lang=}"
       shift
       ;;
     *)
@@ -94,12 +104,18 @@ cd "$SCRIPT_DIR"
 
 PROMPT="Use the mkv-cleaner skill. Clean all MKV and M4V files in: $TARGET"
 
+if [ -n "$TARGET_LANG" ]; then
+  PROMPT="$PROMPT
+The target language is $TARGET_LANG instead of English: keep only audio and subtitle tracks whose language is $TARGET_LANG, and drop every other language."
+fi
+
 if [ -z "$MODEL" ] && [ "$HARNESS" = claude ]; then
   MODEL="$CLAUDE_DEFAULT_MODEL"
 fi
 
 echo "Harness: $HARNESS"
 echo "Model:   ${MODEL:-<harness default>}"
+echo "Lang:    ${TARGET_LANG:-eng}"
 echo "Target:  $TARGET"
 
 case "$HARNESS" in

@@ -102,6 +102,13 @@ Pick a model with `--model <model>`. Claude Code defaults to `claude-sonnet-5` a
 ./mkv-clean.sh --harness claude --model claude-opus-5 /path/to/your/movies
 ```
 
+Keep another language than English with `--lang <code>`, comma-separated for several. It replaces English as the target language for both audio and subtitles; two- and three-letter codes both work.
+
+```bash
+./mkv-clean.sh --lang fr /path/to/your/movies
+./mkv-clean.sh --lang jpn,eng /path/to/your/movies
+```
+
 **Or prompt your agent directly:**
 
 ```bash
