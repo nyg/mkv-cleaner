@@ -22,10 +22,10 @@ The agent uses `ffprobe` to analyze each file, then constructs and runs an `mkvm
 
 ```bash
 # macOS
-brew install mkvtoolnix ffmpeg
+brew install mkvtoolnix ffmpeg jq
 
 # Ubuntu / Debian
-sudo apt install mkvtoolnix ffmpeg
+sudo apt install mkvtoolnix ffmpeg jq
 ```
 
 You also need [GitHub Copilot CLI](https://docs.github.com/copilot/how-tos/copilot-cli):
@@ -77,7 +77,7 @@ copilot "clean all MKVs here but keep French audio too"
 mkv-cleaner/
 ├── README.md
 ├── AGENTS.md              # Agent instructions — edit this to change behaviour
-└── mkv-clean.sh           # Convenience launcher with scoped tool permissions
+└── mkv-clean.sh           # Convenience launcher (checks tools, then hands over to Copilot CLI)
 ```
 
 ## Editing the prompt
