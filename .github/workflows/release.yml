@@ -1,6 +1,10 @@
 name: release
 
 on:
+  push:
+    branches: [master]
+    paths:
+      - skills/**
   workflow_dispatch:
     inputs:
       bump:
@@ -20,12 +24,16 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release
+
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          ref: master
           fetch-depth: 0
           token: ${{ secrets.RELEASE_TOKEN || github.token }}
 
@@ -67,6 +75,15 @@ jobs:
               exit 1
             }
           done
+
+          if [ -z "$BUMP" ]; then
+            LAST=$(git describe --tags --abbrev=0 --match 'mkv-cleaner--v*' 2> /dev/null || true)
+            BUMP=$(git log --format=%s ${LAST:+"$LAST.."}HEAD | awk '
+              /^[a-z]+(\([^)]*\))?!:/ { major = 1 }
+              /^feat(\([^)]*\))?:/ { minor = 1 }
+              END { print (major ? "major" : minor ? "minor" : "patch") }')
+            echo "Commits since ${LAST:-the first commit} call for a $BUMP bump"
+          fi
 
           if [ -n "$EXPLICIT" ]; then
             NEXT="$EXPLICIT"
