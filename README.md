@@ -228,4 +228,6 @@ The behaviour lives in `skills/mkv-cleaner/SKILL.md`, in the [Agent Skills](http
 
 Edit `skills/mkv-cleaner/SKILL.md` — it is the single source of truth — then run `./scripts/sync-agents-md.sh` to regenerate `AGENTS.md`. CI fails if the two drift apart.
 
+Merging a change under `skills/` into `master` releases a new plugin version on its own: `feat:` commits since the last release make it a minor bump, a `!` after the type makes it a major one, anything else a patch.
+
 Either way, test the update path from a real install afterwards: `claude plugin marketplace update mkv-cleaner && claude plugin update mkv-cleaner@mkv-cleaner`, restart, and confirm `claude plugin list` shows the new version.
