@@ -207,7 +207,6 @@ opencode run --auto "clean all MKVs here but keep French audio too"
 mkv-cleaner/
 ├── skills/mkv-cleaner/SKILL.md   # The agent. Everything else is packaging.
 ├── AGENTS.md                     # Generated copy, always-on for agents in a checkout
-├── CLAUDE.md                     # Imports AGENTS.md for Claude Code
 ├── mkv-clean.sh                  # Launcher (checks tools, picks a harness)
 ├── install.sh                    # Symlinks the skill into your harnesses
 └── scripts/sync-agents-md.sh     # Regenerates AGENTS.md from the skill
@@ -219,7 +218,7 @@ The behaviour lives in `skills/mkv-cleaner/SKILL.md`, in the [Agent Skills](http
 
 | Harness | Files | Notes |
 |---------|-------|-------|
-| Claude Code | `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.claude/skills/` | Plugin install, or the `.claude/skills/` symlink in a checkout. Claude Code reads `CLAUDE.md`, never `AGENTS.md`, so `CLAUDE.md` imports it. |
+| Claude Code | `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.claude/skills/` | Plugin install, or the `.claude/skills/` symlink in a checkout. Also reads `AGENTS.md` at the repo root. |
 | Codex | `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json`, `.agents/skills/` | Plugin install, or the `.agents/skills/` symlink in a checkout. Also reads `AGENTS.md` at the repo root. |
 | GitHub Copilot CLI | `.github/plugin/plugin.json`, `.github/plugin/marketplace.json`, `.claude/skills/`, `.agents/skills/` | Plugin install, or either symlink in a checkout. Also reads `AGENTS.md` at the repo root. |
 | OpenCode | `.claude/skills/`, `.agents/skills/` | No adapter needed; OpenCode scans both paths in a project and `~/.claude/skills`, `~/.agents/skills` globally. |
